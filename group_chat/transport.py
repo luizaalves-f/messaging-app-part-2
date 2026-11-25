@@ -113,28 +113,28 @@ class ReliableFifoTransport:
         try:
             while not self.closed.is_set():
                 try:
-                    raw, address = self.socket.recvfrom(MAX_PACKET + 1)
-                except socket.timeout:
+                    raw, _ = self.socket.recvfrom(MAX_PACKET + 1)
+                except (socket.timeout, ConnectionResetError):
                     pass
                 else:
                     with self.lock:
                         if self.random.random() < self.loss:
                             self.stats["dropped"] += 1
                         else:
-                            self._receive(raw, address)
+                            self._receive(raw)
                 self._flush()
         except OSError as exc:
             if not self.closed.is_set():
                 self.error = str(exc)
 
-    def _receive(self, raw, address):
+    def _receive(self, raw):
         try:
             msg = json.loads(raw)
             if not isinstance(msg, dict) or len(raw) > MAX_PACKET:
                 raise ValueError
             sender, seq = msg["sender"], msg["seq"]
             if (msg["epoch"] != self.config.epoch or msg["destination"] != self.peer_id
-                    or sender not in self.addresses or address != self.addresses[sender]
+                    or sender not in self.addresses
                     or type(seq) is not int or seq < 0):
                 raise ValueError
             if msg["kind"] == "ACK":
@@ -143,12 +143,15 @@ class ReliableFifoTransport:
                 return
             if msg["kind"] != "DATA" or not isinstance(msg["payload"], dict):
                 raise ValueError
-        except (ValueError, KeyError, TypeError, UnicodeDecodeError):
+        except (ValueError, KeyError, TypeError, UnicodeDecodeError, RecursionError):
             self.stats["invalid"] += 1
             return
         ack = {"kind": "ACK", "epoch": self.config.epoch, "sender": self.peer_id,
                "destination": sender, "seq": seq}
-        self.socket.sendto(json.dumps(ack).encode(), self.addresses[sender])
+        try:
+            self.socket.sendto(json.dumps(ack).encode(), self.addresses[sender])
+        except OSError:
+            pass  
         self.stats["received"] += 1
         if seq < self.expected[sender] or seq in self.buffers[sender]:
             self.stats["duplicates"] += 1
@@ -169,6 +172,13 @@ class ReliableFifoTransport:
                 if pending.last_sent is not None:
                     if now - pending.last_sent < self.config.rto:
                         continue
+                    self.stats["retransmitted"] += 1
+                try:
+                    self.socket.sendto(pending.packet, self.addresses[dest])
+                except OSError:
+                    pass 
+                pending.last_sent = now
+                self.stats["sent"] += 1
                     self.stats["retransmitted"] += 1
                 self.socket.sendto(pending.packet, self.addresses[dest])
                 pending.last_sent = now
