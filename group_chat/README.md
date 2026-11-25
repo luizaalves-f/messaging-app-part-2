@@ -163,7 +163,7 @@ python3 -m group_chat dashboard --config group_chat/example-config.json
 
 O painel externo permite chat, perda, inspeção e exportação; não reinicia processos nem oferece os cenários automáticos. Para mudar o modo ou limpar o histórico, encerre os peers, altere `epoch` e `mode` no arquivo compartilhado e reinicie todo o grupo e o painel.
 
-Se o endereço anunciado não estiver disponível para bind local, por exemplo atrás de NAT, execute o peer com `--bind 0.0.0.0`. Libere as portas UDP **entre os peers** e HTTP **entre o painel e os peers**. O endereço e a porta de origem do datagrama devem corresponder à configuração; NAT que altera a porta de origem não é suportado. O padrão escuta somente em loopback. É um laboratório sem autenticação ou TLS, destinado a execução local ou em rede controlada.
+Se o endereço anunciado não estiver disponível para bind local, por exemplo atrás de NAT, execute o peer com `--bind 0.0.0.0`. Libere as portas UDP **entre os peers** e HTTP **entre o painel e os peers**. O padrão escuta somente em loopback. É um laboratório sem autenticação ou TLS, destinado a execução local ou em rede controlada.
 
 ## API de controle
 
