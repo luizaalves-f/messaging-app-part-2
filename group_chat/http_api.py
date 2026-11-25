@@ -81,5 +81,7 @@ def peer_server(node, bind_host=None):
                     self.json(404, {"error": "Rota inexistente."})
             except (ValueError, TypeError) as exc:
                 self.json(400, {"error": str(exc)})
+            except RuntimeError as exc:
+                self.json(503, {"error": str(exc)})
 
     return ThreadingHTTPServer((bind_host or node.member.host, node.member.http_port), Handler)
