@@ -50,4 +50,4 @@ Abra **http://127.0.0.1:8080**. Para encerrar o painel e os peers, use `Ctrl+C`.
 
 Veja [a documentação da parte 2](group_chat/README.md) para os cenários de apresentação,
 arquitetura, garantias, limites, testes e execução em máquinas distintas.
-As implementações da parte 1 abaixo permanecem preservadas.
+As implementações da parte 1 acima permanecem preservadas.
