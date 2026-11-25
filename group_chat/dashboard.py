@@ -93,8 +93,6 @@ class Runtime:
             return request_json(self.url(peer_id, "/command"), data)
 
     def network(self, loss):
-        if type(loss) not in (int, float) or not 0 <= loss <= 0.8:
-            raise ValueError("Perda deve estar entre 0 e 0.8.")
         with self.lock:
             for m in self.config.members:
                 request_json(self.url(m.id, "/network"), {"loss": loss})
