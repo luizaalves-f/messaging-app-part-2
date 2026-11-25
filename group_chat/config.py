@@ -56,8 +56,11 @@ class Config:
     def to_dict(self):
         return asdict(self)
 
-    @classmethod
+       @classmethod
     def load(cls, path):
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
-        data["members"] = tuple(Member(**m) for m in data["members"])
-        return cls(**data)
+        try:
+            data = json.loads(Path(path).read_text(encoding="utf-8"))
+            data["members"] = tuple(Member(**m) for m in data["members"])
+            return cls(**data)
+        except (KeyError, TypeError) as exc:
+            raise ValueError(f"Arquivo de configuração inválido: {exc}") from exc
